@@ -1,0 +1,94 @@
+get http://localhost:3000/users
+
+###
+get http://localhost:3000/users/6212077eabfbbc531e423dde
+
+###
+post http://localhost:3000/users/single/9217135499
+Content-Type: application/json
+
+{
+    "password":"moham1377"
+}
+
+
+###
+post http://www.trademasterofficial.ir/api/users/single/9217135499
+Content-Type: application/json
+
+{
+    "password": "12341234"
+}
+
+###
+post https://www.trademasterofficial.ir/api/users
+Content-Type: application/json
+
+{
+    "firstname": "Mohammad",
+    "lastname": "Khalilzadeh",
+    "email": "Mohammad@gmail.com",
+    "password": "moham1377",
+    "phone": "09217135499",
+    "begins": "2014-01-02",
+    "ends": "2015-01-01",
+    "cardnumber":"6037999912340154",
+    "city": "Qazvin",
+    "province": "Qazvin",
+    "address": "Isar Street",
+    "postalcode":"34100000",
+    "sheba": "IR123000000000000001458",
+    "role": "ceo"
+}
+
+###
+delete http://localhost:3000/users/6211281c458001439044d847
+
+###
+get http://localhost:3000/products
+
+###
+get http://localhost:3000/bills
+
+###
+post http://localhost:3000/products
+Content-Type: application/json
+
+{
+    "name":"shirini",
+    "price":120000,
+    "description":"it's a sweet",
+    "unit":"numbers",
+    "owner":"arm",
+    "available":true
+}
+
+###
+delete http://localhost:3000/bills/620c8d8adba9e2a66667341b
+
+###
+get http://localhost:3000/tickets
+
+###
+post http://www.trademasterofficial.ir/api/employees
+Content-Type: application/json
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYyMmFkYTZlMGYyZGIwMDdiYWZjZmE0NCIsImlhdCI6MTY0Njk3Njc4NCwiZXhwIjoxNjQ2OTgwMzg0fQ.HqTD4Q1oTJewX6_Xp-XtUGDAdEL0_ZI9cWHCKRq1Yic
+
+{
+    "firstname": "Mohammad",
+    "lastname": "Khalilzadeh",
+    "username": "mohammad1377",
+    "password": "12341234",
+    "phone": "09217135499",
+    "idnumber":"6037999912340154",
+    "educations":true,
+    "bills":true,
+    "advertise":true,
+    "product":true,
+    "requests":true,
+    "tickets":true,
+    "orders":true,
+    "identifying":true,
+    "allies":true,
+    "settings":true
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=
+                                                                                                                                                                                                                                                                                                                                                                                                    , initial-scale=1.0">
+        <title>
+            <%= title %>
+        </title>
+        <style>
+            .successbox {
+                width: 70%;
+                margin: 10% 15%;
+                border-radius: 15px;
+                background-color: rgb(101, 248, 126);
+                border: 2px solid rgb(24, 155, 24);
+                padding: 2%;
+            }
+
+            .successbtn {
+                width: 30%;
+                padding: 10px;
+                text-decoration: none;
+                border: 2px solid green;
+                background: green;
+                border-radius: 15px;
+                color: white;
+            }
+
+            .failbox {
+                width: 70%;
+                margin: 10% 15%;
+                border-radius: 15px;
+                background-color: rgb(248, 101, 101);
+                border: 2px solid rgb(155, 24, 24);
+                padding: 2%;
+                color: white;
+            }
+
+            .failbtn {
+                width: 30%;
+                padding: 10px;
+                text-decoration: none;
+                border: 2px solid red;
+                background: red;
+                border-radius: 15px;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <center>
+            <% if (isdone == true) { %>
+                <div class="successbox">
+                    <h3>
+                        شماره پیگیری :
+                        <%= refID %>
+                    </h3>
+                    <p>
+                        <%= message %>
+                    </p>
+                    <br>
+                    <a class="successbtn" href="http://www.trademasterofficial.ir">
+                        بازگشت به خانه
+                    </a>
+                </div>
+            <% } %>
+
+            <% if (isdone == false) { %>
+                <div class="failbox">
+                    <p>
+                        <%= message %>
+                    </p>
+                    <br>
+                    <a class="failbtn" href="http://www.trademasterofficial.ir">
+                        بازگشت به خانه
+                    </a>
+                </div>
+            <% } %>
+        </center>
+
+    </body>
+</html>

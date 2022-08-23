@@ -2,6 +2,11 @@ const mongoose = require('mongoose')
 
 
 const billSchema = new mongoose.Schema({
+    
+    ShopName:{
+        type: String,
+        required: true,
+    },
     CustomerPhone:{
         type: String,
         required: true,
@@ -24,7 +29,7 @@ const billSchema = new mongoose.Schema({
         default: "Pending"
     },
     Datetime:{
-        type: Date,
+        type: String,
         required: true,
         default: Date.now()
     },

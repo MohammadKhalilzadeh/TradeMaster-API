@@ -15,7 +15,7 @@ const businessSchema = new mongoose.Schema({
         unique:false
     },
     email:{
-        type: Number,
+        type: String,
         required: true,
     },
     status:{

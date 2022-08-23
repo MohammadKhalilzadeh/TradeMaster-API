@@ -1,11 +1,14 @@
 const { response } = require('express')
 const express = require('express')
-const { where, findOne } = require('../models/user')
+const { where, findOne, findByIdAndUpdate } = require('../models/user')
 const router = express.Router()
 const User = require('../models/user')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const checkAuth = require('../middleware/check-auth')
+
+const TrezSmsClient = require("trez-sms-client")
+const client = new TrezSmsClient("MohammadKh77","13771377")
 
 const multer = require('multer')
 const path = require('path')
@@ -32,54 +35,121 @@ router.get('/',/* checkAuth, */ async (req, res) => {
     }
 })
 
-// Getting One
-router.get('/:id', getUser,/* checkAuth,*/ async  (req, res) => {
+// used in web
+router.get('/unverifieds', checkAuth,  async (req, res) => {
+    try{
+        const users = await User.find().where('verified').equals(false)
+        return res.status(200).json(users)
+    }catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
+
+// used in phone
+router.get('/:id', getUser,  async  (req, res) => {
     return res.status(200).send(res.user)
 })
 
-// Get by Email or Phone
-router.post('/single/:input', async  (req, res) => {
-    console.log("GOT");
-    User.findOne().or([{ phone: req.params.input },{email:req.params.input}])
+// used in phone
+router.post('/getcode/:phone', async (req,res)=>{
+    try {
+        const user = await User.findOne().where('phone').equals(req.params.phone)
+        if(!user){
+            res.status(404)
+        }else{
+            client.autoSendCode(user.phone,"TradeMaster Code")
+            .catch(err => res.status(500).json(err))
+
+            res.status(200).json(user)
+        }
+    } catch (error) {
+        return res.status(500).json(error)
+    }
+} )
+
+// used in phone
+router.post('/chkcode/:phone', async (req,res)=>{
+    try {
+        const user = await User.findOne().where('phone').equals(req.params.phone)
+        client.checkCode(req.params.phone,req.body.code)
+        .then((isvalid) => {
+            if(isvalid){
+                return res.status(200).json(user)
+            }else{
+                return res.status(404);
+            }
+        }).catch(err => {
+            res.status(500).json(err)
+        })
+    } catch (error) {
+        res.status(500).json(error)
+    }
+} )
+
+// used in phone
+router.patch('/chngpass/:id', async(req,res)=>{
+    try {
+        const user = await User.findById(req.params.id)
+        if(user){
+            bcrypt.hash(req.body.password,10,async(err,hash)=>{
+                if(err){
+                    res.status(500).json(err)
+                }else{
+                    const result = await User.findByIdAndUpdate(user.id,{
+                        password:hash
+                    })
+
+                    await result.save().then(end => {
+                        res.status(200).json(end)
+                    }).catch(err => {
+                        res.status(500).json(err)
+                    })
+                }
+            })
+        }
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}  )
+
+// used in phone
+router.post('/loginroute/:input', async  (req, res) => {
+    User.findOne({ phone: req.params.input })
     .exec()
     .then(user => {
         if(!user){
-            console.log("No such user");
             return res.status(404).json({
                 message: 'Not Found'
             })
         }
-        bcrypt.compare(req.body.password,user.password,(err,result)=>{
-            if(err){
-                console.log("Un-matched password");
-                return res.status(401).json({
-                    message: 'Unauthorized'
-                })
-            }
-            if(result){
-                console.log("You're In");
-                const token = jwt.sign({
-                    "id":user._id,
-                } ,
-                "tm4ever"
-                ,{ expiresIn: "1h" }, )
-                    return res.status(202).json({token:token})
+        else{
+            bcrypt.compare(req.body.password, user.password,(err,result)=>{
+                if(err || result==false){
+                    console.log("3");
+                    return res.status(401).json({
+                        message: 'Unauthorized'
+                    })
                 }
-            //  res.status(401).json({
-            //     message: 'Auth Failed'
-            // })
-            // console.log("BCRYPT");
-            // console.log("5");
-        })
+                if(result){
+                    const token = jwt.sign({
+                        "id":user._id,
+                    } ,
+                    "tm4ever"
+                    ,{ expiresIn: "24h" }, )
+                    user.token = token
+                    console.log(user);
+                        return res.status(200).json(user)
+                }
+            })
+        }
     })
     .catch(err => {
-        console.log("Error");
         res.status(500).json({ error: err})
     })
 
 })
 
-// Creating One
+// used in phone
 router.post('/',  async (req, res) => {
 
     try {
@@ -106,7 +176,7 @@ router.post('/',  async (req, res) => {
                         })
                         //const newuser =
                         await user.save().then(result => {
-                            res.status(201).json(result)
+                            res.status(200).json(result)
                         }).catch(err => {
                             console.log(err);
                             res.status(500).json({ error: err})
@@ -119,39 +189,36 @@ router.post('/',  async (req, res) => {
         .catch()
 
     } catch (error) {
-        res.status(400).json({message:error.message})
+        res.status(500).json({message:error.message})
     }
 })
 
-router.post('/search/:phone',  async(req,res)=>{
+// used in web
+router.post('/search',  async(req,res)=>{
     try {
-        console.log(req.params.phone)
-        const result = await User.find({phone: req.params.phone}).exec()
-        console.log(result);
-        res.json(result)
+        console.log(req.body.search)
+        let search = req.body.search
+        let find = await User.find({ phone: { $regex:new RegExp( '.*'+ search +'.*','i') } }).limit(10).exec()
+        res.send(find)
+        // const result = await User.find({phone: req.body.search}).exec()
+        // console.log(result);
+        // res.json(result)
     } catch (error) {
         res.json(error)
     }
 })
 
-// Updating One
-router.put('/ident/:id', checkAuth,  async  (req, res) => {
+// used in phone
+router.patch('/ident/:id', checkAuth,  async  (req, res) => {
     try {
-        console.log(req.body);
-        console.log(req.params);
-        const user1 = await User.findByIdAndUpdate(req.params.id, {
-            city:req.body.city,
-            province:req.body.province,
-            sheba:req.body.sheba,
-            address:req.body.address,
-            postalcode:req.body.postalcode,
-        })
+        const user1 = await User.findByIdAndUpdate(req.params.id,
+            req.body,
+        )
 
-        console.log(user1);
         const updatedUser = await user1.save()
-        console.log(updatedUser);
         res.status(200).json(updatedUser)
     } catch (error) {
+        console.log(error);
         res.status(400).json({ message: error.message})
     }
 })
@@ -159,13 +226,20 @@ router.put('/ident/:id', checkAuth,  async  (req, res) => {
 // uploading imgs
 router.post('/images/pics/:id', upload.single('image'),/* checkAuth,*/ async (req,res) => {
 
-    const user = await User.findById(req.params.id)
-    user.imgs.push(req.file.path)
     try {
-        await user.save()
-        res.status(200).json(user)
+
+        const user = await User.findById(req.params.id)
+    
+        if(!user){
+            res.status(404).json({message:'Not Found'})
+        }else{
+            user.imgs.push(req.file.filename)
+            await user.save()
+            res.status(200).json(user)
+            console.log("Done");
+        }
     } catch (error) {
-        res.json(error)
+        res.status(500).json({message:error.message})
     }
 })
 
@@ -181,18 +255,15 @@ router.get("/images/:fileName", async (req, res) => {
     res.sendFile(path.join(__dirname, "./uploads/userpics/", req.params.fileName));
   });
 
-// verifying user
-router.put('/verify/:id',/* checkAuth, */ async  (req, res) => {
+// used in web
+router.put('/verify/:id', checkAuth,  async  (req, res) => {
 
     try {
-        console.log(req.header);
         const user1 = await User.findByIdAndUpdate(req.params.id, {
             verified: true ,
         })
 
-        console.log(user1);
         const updatedUser = await user1.save()
-        console.log(updatedUser);
         res.status(200).json(updatedUser)
     } catch (error) {
         res.status(400).json({ message: error.message})

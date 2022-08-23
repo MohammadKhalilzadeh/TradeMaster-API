@@ -1,4 +1,4 @@
-get http://localhost:3000/users
+get http://localhost:3000/categories
 
 ###
 get http://localhost:3000/users/6212077eabfbbc531e423dde
@@ -45,7 +45,7 @@ Content-Type: application/json
 delete http://localhost:3000/users/6211281c458001439044d847
 
 ###
-get http://localhost:3000/products
+get http://localhost:3000/business
 
 ###
 get http://localhost:3000/bills

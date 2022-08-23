@@ -3,10 +3,10 @@ const router = express.Router()
 const Tickets = require('../models/tickets')
 const checkAuth = require('../middleware/check-auth')
 
-// Will do it in SQL later
+// used in web
 router.get('/', async (req,res) => {
     try {
-        const tickets = await Tickets.find()
+        const tickets = await Tickets.find().where('seen').equals(false)
         res.json(tickets)
     } catch (error) {
         res.status(500).json({ message: error.message})
@@ -17,15 +17,25 @@ router.get('/:id', getTicket , async(req,res) => {
     res.send(res.ticket)
 })
 
-router.post('/', async(req,res) => {
-    const ticket = new Tickets({
-        firstname:req.body.firstname,
-        lastname:req.body.lastname,
-        desc: req.body.desc,
-        email: req.body.email,
-    })
-
+// used in web
+router.post('/search',  async(req,res)=>{
     try {
+        console.log(req.body.search)
+        let search = req.body.search
+        let find = await Tickets.find({ lastname: { $regex:new RegExp( '.*'+ search +'.*','i') } }).limit(10).exec()
+        res.send(find)
+        // const result = await User.find({phone: req.body.search}).exec()
+        // console.log(result);
+        // res.json(result)
+    } catch (error) {
+        res.json(error)
+    }
+})
+
+// used in web
+router.post('/', async(req,res) => {
+    try {
+        const ticket = new Tickets(req.body)
         await ticket.save()
         res.status(200).json(ticket)
     } catch (error) {
@@ -33,7 +43,7 @@ router.post('/', async(req,res) => {
     }
 })
 
-// Updating One
+// used in web
 router.patch('/:id', getTicket, checkAuth, async  (req, res) => {
     try {
         res.ticket.seen = req.body.seen

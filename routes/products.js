@@ -5,6 +5,7 @@ const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
 const checkAuth = require('../middleware/check-auth')
+const { log } = require('console')
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -20,6 +21,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({storage: storage})
 
+// used in web
 router.get('/', async (req,res) => {
     try{
         const ps = await Product.find()
@@ -29,10 +31,12 @@ router.get('/', async (req,res) => {
     }
 })
 
+// used in web
 router.get('/:id',getProduct, async (req,res)=>{
     res.send(res.p)
 })
 
+// used in web
 router.post('/', upload.single('image'), checkAuth, async (req,res)=>{
     const prod = new Product({
         name: req.body.name,
@@ -51,21 +55,46 @@ router.post('/', upload.single('image'), checkAuth, async (req,res)=>{
     }
 })
 
+// used in web
+router.post('/search',  async(req,res)=>{
+    try {
+        console.log(req.body.search)
+        let search = req.body.search
+        let find = await Product.find({ name: { $regex:new RegExp( '.*'+ search +'.*','i') } }).limit(10).exec()
+        res.send(find)
+        // const result = await User.find({phone: req.body.search}).exec()
+        // console.log(result);
+        // res.json(result)
+    } catch (error) {
+        res.json(error)
+    }
+})
+
+// used in web
 router.delete('/:id', checkAuth, getProduct, async (req,res) => {
     try {
         fs.unlinkSync( path.join(__dirname,'../'+ res.p.imagename));
         await res.p.remove()
-        res.json({message:'Deleted the Product'})
+        res.status(200).json({message:'Deleted the Product'})
     } catch (error) {
         console.log(error);
         res.status(500).json({message: error.message})
     }
 })
 
-router.patch('/:id', checkAuth, getProduct, async(req,res) => {
+// used in web
+router.patch('/:id', checkAuth, async(req,res) => {
+    const product = await Product.findById(req.params.id)
     try{
-        await res.p.save()
-        res.json(res.p)
+        if (!product) {
+            res.status(404).json({ message: 'No Such Product'})
+        }else{
+            let field = req.body.field
+            product[field] = req.body.value;
+            console.log(product);
+            await product.save()
+            res.status(200).json(product)
+        }
     }catch(err){
         res.status(400).json({ message: err.message})
     }

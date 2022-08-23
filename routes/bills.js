@@ -9,27 +9,49 @@ const client = new TrezSmsClient("MohammadKh77", "13771377")
 const mongoose = require('mongoose');
 const { findByIdAndUpdate } = require('../models/bills');
 
-
-router.get('/', checkAuth,  async (req,res) => {
+// used in web
+router.get('/website/orders', checkAuth,  async (req,res) => {
     try {
-        const bills = await Bill.find().or([{ Status:"Pending"},{ Status:"Seen"},{ Status:"On Way"},] )
+        const bills = await Bill.find({ $or: [{ Status:"Pending"},{ Status:"Seen"},{ Status:"On Way"},] }).where("ShopName").equals("TradeMaster")
         return res.status(200).json(bills)
     } catch (error) {
         res.status(500).json({message:error.message})
     }
 })
 
-router.get('/done', checkAuth,  async (req,res) => {
+// used in phone
+router.get('/:id',   async (req,res) => {
     try {
-        const bills = await Bill.find().and({ Status:"Delivered"} )
-        return res.status(200).json(bills)
+        const bill = await Bill.findById(req.params.id)
+        console.log(bill);
+        return res.status(200).json(bill)
     } catch (error) {
         res.status(500).json({message:error.message})
     }
 })
 
-router.get('/:id', getBill, async (req,res) => {
-    return res.status(200).json(res.bill)
+// used in web
+router.get('/website/done', checkAuth,  async (req,res) => {
+    try {
+        const bills = await Bill.find().where("Status").equals("Delivered")
+        console.log(bills);
+        return res.status(200).json(bills)
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({message:error.message})
+    }
+})
+
+// used in phone
+router.get('/customer/:phone', async (req,res) => {
+    try {
+        console.log(req.params.phone);
+        const bills = await Bill.find().where("CustomerPhone").equals(req.params.phone).or([ { Status:"Pending" },{ Status:"Seen"},{ Status:"On Way"} ])
+        res.status(200).json(bills)
+        console.log(bills.length );
+    } catch (error) {
+        res.status(500).json({message:error.message})
+    }
 })
 
 router.get('/pending/:input', async(req,res) => {
@@ -42,21 +64,33 @@ router.get('/pending/:input', async(req,res) => {
     }
 })
 
-router.get('/onway/:input', async(req,res) => {
+// used in phone
+router.get('/shoporders/:id', async(req,res) => {
     try {
-        const field = req.body.field
-        const bills = await Bill.find().and([{ field: req.params.input },{ Status:"Delivered"} ])
+        const bills = await Bill.find().where("owner").equals(req.params.id)
         res.status(200).json(bills)
     } catch (error) {
         res.status(500).json({message:error.message})
     }
 })
 
+// used in web
+router.post('/search',  async(req,res)=>{
+    try {
+        let search = req.body.search
+        let find = await Bill.find({ phone: { $regex:new RegExp( '.*'+ search +'.*','i') } }).limit(10).exec()
+        res.send(find)
+    } catch (error) {
+        res.json(error)
+    }
+})
+
+// used in phone
 router.post('/', checkAuth,  async (req,res) => {
     console.log("----1");
     zarinex.PaymentRequestWithExtra({
         amount: req.body.TotalPrice,
-        callback_url:'http://192.168.1.106:3000/bills/verify/Ex',
+        callback_url:'http://192.168.1.101:3000/bills/verify/Ex',
         description: "از اعتمادشما به تریدمستر مفتخریم",
         mobile: req.body.CustomerPhone,
         wages:[
@@ -73,6 +107,51 @@ router.post('/', checkAuth,  async (req,res) => {
         if(response.code == 100){
             console.log("----3");
             const bill = new Bill({
+                ShopName: req.body.ShopName ,
+                CustomerPhone: req.body.CustomerPhone,
+                CustomerAddress: req.body.CustomerAddress,
+                TotalPrice: req.body.TotalPrice,
+                PartnerShare: req.body.PartnerShare,
+                owner:req.body.owner,
+                items: req.body.items,
+                authority:response.authority,
+                Datetime:req.body.Datetime,
+            })
+            try {
+                const result = await bill.save()
+                res.status(200).json(response);
+            } catch (error) {
+                console.log("----4");
+                console.log(error);
+                res.status(500).json({message:error.message})
+            }
+        }
+    })
+})
+
+// used in web
+router.post('/website', checkAuth,  async (req,res) => {
+    console.log("----1");
+    zarinex.PaymentRequestWithExtra({
+        amount: req.body.TotalPrice,
+        callback_url:'http://192.168.1.101:3000/bills/verify/Ex',
+        description: "از اعتمادشما به تریدمستر مفتخریم",
+        mobile: req.body.CustomerPhone,
+        wages:[
+            {
+                zp_id: "ZP.1090478" ,
+                // iban:req.body.owner,
+                iban:"IR260120020000005217837375",
+                amount:req.body.PartnerShare,
+                description:"محصول",
+            }
+        ],
+    }).then(async(response) => {
+        console.log("----2");
+        if(response.code == 100){
+            console.log("----3");
+            const bill = new Bill({
+                ShopName: req.body.ShopName ,
                 CustomerPhone: req.body.CustomerPhone,
                 CustomerAddress: req.body.CustomerAddress,
                 TotalPrice: req.body.TotalPrice,
@@ -94,6 +173,7 @@ router.post('/', checkAuth,  async (req,res) => {
     })
 })
 
+// used in web and phone
 router.get('/verify/Ex', async(req, res)=>{
     console.log("---1");
     const bill = await Bill.findOne().and({ authority : req.query.Authority })
@@ -145,7 +225,7 @@ router.get('/verify/Ex', async(req, res)=>{
       }
 } )
 
-// Updating One
+// used in web
 router.patch('/chngstatus/:id', checkAuth,  async  (req, res) => {
     const bill = await Bill.findById(req.params.id)
     try {
@@ -165,7 +245,17 @@ router.patch('/chngstatus/:id', checkAuth,  async  (req, res) => {
     }
 })
 
-// Deleting One
+// used in phone
+router.patch('/billstatus/:id', checkAuth,  async  (req, res) => {
+    try {
+        const bill = await Bill.findByIdAndUpdate(req.params.id,req.body)
+        res.status(200).json(bill)
+    } catch (error) {
+        res.json(error)
+    }
+})
+
+// used in web
 router.delete('/:id', checkAuth,  getBill, async (req, res) => {
     try {
         await res.bill.remove()
@@ -178,13 +268,11 @@ router.delete('/:id', checkAuth,  getBill, async (req, res) => {
 async function getBill(req, res, next) {
     let bill
     try {
-        console.log(req.params.id);
         bill = await Bill.findById(req.params.id)
         if (bill == null){
             return res.status(404).json({message: 'Not Found'})
         }
     } catch (error) {
-        console.log(error);
         return res.status(500).json({ message: error.message })
     }
 

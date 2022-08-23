@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({storage: storage})
 
-
+// used in web
 router.get('/', async(req,res) => {
     try{
         const Ally = await Allies.find()
@@ -30,6 +30,7 @@ router.get('/', async(req,res) => {
     }
 })
 
+// used in web
 router.post('/', upload.single('image'), checkAuth,  async (req,res) => {
     const ally = new Allies({
         name: req.body.name,
@@ -48,6 +49,7 @@ router.post('/', upload.single('image'), checkAuth,  async (req,res) => {
     }
 })
 
+// used in web
 router.delete('/:id', checkAuth,  getAlly, async(req,res)=>{
     try{
         fs.unlinkSync( path.join(__dirname,'../'+ res.ally.logo));

@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
         match: /([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|"([]!#-[^-~ \t]|(\\[\t -~]))+")@[0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?(\.[0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?)+/
     },
     phone:{
-        type: Number,
+        type: String,
         required: true,
         unique:true,
     },
@@ -47,21 +47,27 @@ const userSchema = new mongoose.Schema({
     // identifications
     cardnumber:{
         type: Number,
+        default: 0,
     },
     sheba:{
         type: String,
+        default: "-",
     },
     city:{
         type: String,
+        default:"-",
     },
     province:{
         type: String,
+        default:"-",
     },
     address:{
         type: String,
+        default:"-",
     },
     postalcode:{
         type: Number,
+        default: 0,
     },
     imgs:{
         type: [String],
@@ -69,7 +75,10 @@ const userSchema = new mongoose.Schema({
     verified:{
         type: Boolean,
         default:false,
-    }
+    },
+    token:{
+        type: String,
+    },
 })
 
 

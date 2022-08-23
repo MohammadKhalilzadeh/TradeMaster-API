@@ -12,6 +12,9 @@ const ticketsRouter = require('./tickets');
 const billsRouter = require('./bills');
 const flsRouter = require('./freelance');
 const businessRouter = require('./business');
+const categoryRouter = require('./categories');
+const itemRouter = require('./items');
+const pushnotif = require('./push-notification');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -28,5 +31,8 @@ router.use('/tickets', ticketsRouter);
 router.use('/bills', billsRouter);
 router.use('/fls', flsRouter);
 router.use('/business', businessRouter);
+router.use('/categories',categoryRouter);
+router.use('/items',itemRouter);
+router.use('/notif',pushnotif);
 
 module.exports = router;

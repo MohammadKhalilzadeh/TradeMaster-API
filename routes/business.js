@@ -20,20 +20,35 @@ const storage = multer.diskStorage({
 
 const upload = multer({storage: storage})
 
-router.get('/', async (req,res) => {
+router.get('/allverified', async (req,res) => {
     try{
         const bs = await Business.find()
-        res.json(ps)
+        console.log(bs);
+        return res.json(bs)
     }catch(err){
         res.status(500).json({message: err.message})
     }
 })
 
+// used in phone
 router.get('/:id',getBusiness, async (req,res)=>{
-    res.send(res.bs)
+    console.log(res.bs);
+    res.json(res.bs)
 })
 
+// used in phone
+router.get('/mines/:id', async (req,res) => {
+    try{
+        const bs = await Business.find().where('owner').equals(req.params.id)
+        res.json(bs)
+    }catch(err){
+        res.status(500).json({message: err.message})
+    }
+})
+
+// used in phone
 router.post('/', checkAuth, async (req,res)=>{
+    console.log(req.body);
     const business = new Business(req.body)
     try{
         await business.save()
@@ -43,12 +58,33 @@ router.post('/', checkAuth, async (req,res)=>{
     }
 })
 
-router.patch('/:id', checkAuth, getBusiness, async(req,res) => {
+// used in phone
+router.post('/image/:id', upload.single('image'),  async(req, res) => {
+    try {
+
+        const business = await Business.findById(req.params.id)
+    
+        if(!business){
+            res.status(404).json({message:'Not Found'})
+        }else{
+            business.imgs.push(req.file.filename)
+            await business.save()
+            res.status(200).json(business)
+        }
+
+    } catch (error) {
+        res.status(500).json({message:error.message})
+    }
+} )
+
+// used in phone
+router.patch('/:id', checkAuth,  async(req,res) => {
     try{
-        await res.bs.save()
-        res.json(res.bs)
+        const business1 = await Business.findByIdAndUpdate(req.params.id,req.body)
+        const business2 = await business1.save()
+        res.status(200).json(business2)
     }catch(err){
-        res.status(400).json({ message: err.message})
+        res.status(500).json({ message: err.message})
     }
 })
 

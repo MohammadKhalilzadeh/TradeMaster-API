@@ -46,7 +46,8 @@ router.get('/website/done', checkAuth,  async (req,res) => {
 router.get('/customer/:phone', async (req,res) => {
     try {
         console.log(req.params.phone);
-        const bills = await Bill.find().where("CustomerPhone").equals(req.params.phone).or([ { Status:"Pending" },{ Status:"Seen"},{ Status:"On Way"} ])
+        const bills = await Bill.find().where("CustomerPhone").equals(req.params.phone).where("ShopName").ne("TradeMaster")
+        // .or([ { Status:"Pending" },{ Status:"Seen"},{ Status:"On Way"} ])
         res.status(200).json(bills)
         console.log(bills.length );
     } catch (error) {
@@ -67,7 +68,7 @@ router.get('/pending/:input', async(req,res) => {
 // used in phone
 router.get('/shoporders/:id', async(req,res) => {
     try {
-        const bills = await Bill.find().where("owner").equals(req.params.id)
+        const bills = await Bill.find().where("owner").equals(req.params.id).where("ShopName").ne("TradeMaster")
         res.status(200).json(bills)
     } catch (error) {
         res.status(500).json({message:error.message})
@@ -78,7 +79,8 @@ router.get('/shoporders/:id', async(req,res) => {
 router.post('/search',  async(req,res)=>{
     try {
         let search = req.body.search
-        let find = await Bill.find({ phone: { $regex:new RegExp( '.*'+ search +'.*','i') } }).limit(10).exec()
+        console.log(search);
+        let find = await Bill.find({ CustomerPhone: { $regex:new RegExp( '.*'+ search +'.*','i') } }).limit(10).exec()
         res.send(find)
     } catch (error) {
         res.json(error)
@@ -90,7 +92,7 @@ router.post('/', checkAuth,  async (req,res) => {
     console.log("----1");
     zarinex.PaymentRequestWithExtra({
         amount: req.body.TotalPrice,
-        callback_url:'http://192.168.1.101:3000/bills/verify/Ex',
+        callback_url:'http://192.168.152.206:3000/bills/verify/Ex',
         description: "از اعتمادشما به تریدمستر مفتخریم",
         mobile: req.body.CustomerPhone,
         wages:[

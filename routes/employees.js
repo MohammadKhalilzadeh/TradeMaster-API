@@ -57,7 +57,7 @@ router.post('/', checkAuth,  async (req,res) => {
 
 // Get by Email or Phone
 router.post('/single/:input', async  (req, res) => {
-
+    console.log(req.params.input);
     Emp.findOne({username:req.params.input})
     .exec()
     .then(emp => {
@@ -85,6 +85,7 @@ router.post('/single/:input', async  (req, res) => {
             }
         })
     }).catch(err => {
+        console.log(err);
         res.status(500).json({error:err})
     })
 

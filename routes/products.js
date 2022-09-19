@@ -31,6 +31,25 @@ router.get('/', async (req,res) => {
     }
 })
 
+router.get('/suggests', async (req,res) => {
+    try{
+        const ps = await Product.find().limit(3).exec()
+        res.json(ps)
+    }catch(err){
+        res.status(500).json({message: err.message})
+    }
+})
+
+// used in web
+router.get('/buy', async (req,res) => {
+    try{
+        const ps = await Product.find().where("available").equals(true)
+        res.json(ps)
+    }catch(err){
+        res.status(500).json({message: err.message})
+    }
+})
+
 // used in web
 router.get('/:id',getProduct, async (req,res)=>{
     res.send(res.p)

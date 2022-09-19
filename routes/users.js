@@ -113,7 +113,8 @@ router.patch('/chngpass/:id', async(req,res)=>{
 }  )
 
 // used in phone
-router.post('/loginroute/:input', async  (req, res) => {
+router.post('/loginroute/single/:input', async  (req, res) => {
+    console.log(req.params.input);
     User.findOne({ phone: req.params.input })
     .exec()
     .then(user => {
@@ -256,7 +257,7 @@ router.get("/images/:fileName", async (req, res) => {
   });
 
 // used in web
-router.put('/verify/:id', checkAuth,  async  (req, res) => {
+router.put('/verify/:id',  async  (req, res) => {
 
     try {
         const user1 = await User.findByIdAndUpdate(req.params.id, {

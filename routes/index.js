@@ -14,6 +14,7 @@ const flsRouter = require('./freelance');
 const businessRouter = require('./business');
 const categoryRouter = require('./categories');
 const itemRouter = require('./items');
+const propertyRouter = require('./property');
 const pushnotif = require('./push-notification');
 
 /* GET home page. */
@@ -33,6 +34,7 @@ router.use('/fls', flsRouter);
 router.use('/business', businessRouter);
 router.use('/categories',categoryRouter);
 router.use('/items',itemRouter);
+router.use('/property',propertyRouter);
 router.use('/notif',pushnotif);
 
 module.exports = router;
